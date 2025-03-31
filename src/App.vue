@@ -8,10 +8,12 @@
 
 		<section class="quiz" v-else-if="!quizCompleted && questions.length > 0">
 			<div class="quiz-info">
+				<!-- Updated line to render question with v-html -->
 				<span class="question" v-html="decodeEntities(getCurrentQuestion.question)"></span>
 				<span class="score">Score {{ score }}/{{ questions.length }}</span>
 			</div>
 
+			<!-- Replacing the options section -->
 			<div class="options">
 				<label v-for="(option, index) in getCurrentQuestion.options" :for="'option' + index" :class="`option ${getCurrentQuestion.selected == index
 					? index == getCurrentQuestion.correct_answer
@@ -24,7 +26,7 @@
 					}`">
 					<input type="radio" :id="'option' + index" :name="getCurrentQuestion.index" :value="index"
 						v-model="getCurrentQuestion.selected" :disabled="getCurrentQuestion.selected" @change="SetAnswer" />
-					<span>{{ decodeEntities(option) }}</span>
+					<span>{{ decodeEntities(option) }}</span> <!-- Update to decode option entities -->
 				</label>
 			</div>
 
@@ -58,8 +60,7 @@ const currentQuestion = ref(0);
 
 const fetchData = async () => {
 	try {
-		// Updated to use a backend proxy endpoint
-		const response = await axios.get('/api/quiz'); // Proxy endpoint
+		const response = await axios.get('https://opentdb.com/api.php?amount=10');
 		const data = response.data;
 		questions.value = data.results.map((question, index) => {
 			const options = [...question.incorrect_answers, question.correct_answer].sort(() => Math.random() - 0.5);
@@ -67,7 +68,7 @@ const fetchData = async () => {
 				...question,
 				options,
 				selected: null,
-				correct_answer: options.indexOf(question.correct_answer),
+				correct_answer: options.indexOf(question.correct_answer), // Assign the correct index
 				index,
 			};
 		});
@@ -78,6 +79,7 @@ const fetchData = async () => {
 	}
 };
 
+// Method to decode HTML entities
 const decodeEntities = (html) => {
 	const txt = document.createElement('textarea');
 	txt.innerHTML = html;
@@ -87,6 +89,7 @@ const decodeEntities = (html) => {
 const score = computed(() => {
 	let value = 0;
 	questions.value.forEach((q) => {
+		// Using String comparison to handle type mismatch between correct_answer and selected
 		if (q.selected !== null && String(q.correct_answer) === String(q.selected)) {
 			value++;
 		}
